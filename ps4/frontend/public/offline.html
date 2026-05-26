@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sin conexión — Puerta Segura v3.0</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      background:#04090f;color:#d4ecff;
+      font-family:'IBM Plex Sans',system-ui,sans-serif;
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      padding:24px;
+    }
+    .container{max-width:420px;width:100%;text-align:center;}
+    .shield{font-size:72px;margin-bottom:20px;filter:drop-shadow(0 0 24px rgba(0,180,255,.3));opacity:.6;}
+    h1{font-size:22px;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:1px;}
+    p{font-size:13px;color:#5a7d99;line-height:1.7;margin-bottom:24px;}
+    .status{
+      display:inline-flex;align-items:center;gap:8px;
+      background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.25);
+      border-radius:8px;padding:10px 18px;margin-bottom:28px;
+      font-size:12px;color:#ff8c00;font-family:'IBM Plex Mono',monospace;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:#ff8c00;animation:blink 1.5s infinite;}
+    button{
+      background:#00b4ff;color:#000;border:none;border-radius:9px;
+      padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;
+      letter-spacing:.5px;box-shadow:0 4px 18px rgba(0,180,255,.35);
+      transition:all .2s;
+    }
+    button:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,180,255,.5);}
+    .hint{font-size:11px;color:#3a5570;margin-top:20px;font-family:'IBM Plex Mono',monospace;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="shield">🛡️</div>
+    <h1>Sin conexión con el servidor</h1>
+    <p>
+      El sistema Puerta Segura no puede comunicarse con el backend en este momento.<br/>
+      Puede ser una falla de red o que el servidor esté reiniciando.
+    </p>
+    <div class="status">
+      <div class="dot"></div>
+      BACKEND INACCESIBLE
+    </div>
+    <br/>
+    <button onclick="location.reload()">↺ Reintentar conexión</button>
+    <div class="hint">Universidad de Cundinamarca · Puerta Segura v3.0</div>
+  </div>
+  <script>
+    // Reintenta automáticamente cada 10 segundos
+    setInterval(() => {
+      fetch('/api/stats/').then(r => { if (r.ok) location.reload(); }).catch(() => {});
+    }, 10000);
+  </script>
+</body>
+</html>

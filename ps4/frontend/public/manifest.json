@@ -1,0 +1,13 @@
+{
+  "short_name": "Puerta Segura",
+  "name": "Puerta Segura v3.0 — Control de Acceso",
+  "description": "Sistema de Control de Acceso Vehicular — Universidad de Cundinamarca",
+  "icons": [
+    {"src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon"}
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#04090f",
+  "theme_color": "#00b4ff",
+  "orientation": "portrait-primary"
+}
