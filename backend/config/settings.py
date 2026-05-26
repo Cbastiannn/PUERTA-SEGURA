@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config
-import dj_database_url
+import pymysql
+pymysql.install_as_MySQLdb()
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
