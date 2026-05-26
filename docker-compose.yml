@@ -1,0 +1,65 @@
+version: '3.9'
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports: ["6379:6379"]
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: puerta_segura
+      MYSQL_ROOT_PASSWORD: PuertaSegura2026!
+    ports: ["3307:3306"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/puerta_segura.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pPuertaSegura2026!"]
+      interval: 10s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports: ["8000:8000"]
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: PuertaSegura2026!
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: puerta-segura-docker-2026
+      DEBUG: "False"
+    depends_on:
+      db:    { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  celery:
+    build: ./backend
+    restart: unless-stopped
+    command: celery -A config worker -l info -c 2
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: PuertaSegura2026!
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - backend
+      - redis
+
+  celery-beat:
+    build: ./backend
+    restart: unless-stopped
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: PuertaSegura2026!
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - celery
+
+volumes:
+  mysql_data:
