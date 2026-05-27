@@ -1,28 +1,39 @@
 # 🛡️ PUERTA SEGURA v3.0
-### Sistema de Control de Acceso Vehicular — Versión Premium
+### Sistema de Control de Acceso Vehicular
 
 **Universidad de Cundinamarca · Seccional Girardot · Ingeniería de Software**  
-**Autores:** Sebastián D. Uribe C. & Andrés F. Castañeda
+**Autores:** Sebastián D. Uribe C. & Andrés F. Castañeda  
+**Repositorio:** https://github.com/Cbastiannn/PUERTA-SEGURA
 
 ---
 
-## 🚀 Mejoras v3.0 vs v2.0
+## 📋 Descripción
 
-| Categoría | v2.0 | v3.0 |
-|-----------|------|------|
-| **Tiempo real** | Polling cada 15-30s | **WebSockets** (instantáneo) |
-| **Emails** | `threading` frágil | **Celery** con reintentos automáticos |
-| **Caché** | Ninguna | **Redis** — stats en 1ms |
-| **Auth** | JWT en body/localStorage | **httpOnly cookies** (antiXSS) |
-| **Tests** | Ninguno | **37 pruebas unitarias** |
-| **Frontend** | 1 archivo 1700 líneas | **Arquitectura de componentes** |
-| **Estado global** | Props drilling | **React Context API** |
-| **Búsqueda** | Dispara petición por tecla | **useDebounce** — petición al parar |
-| **Ordenamiento** | Sin ordenar | **Click en headers** de tabla |
-| **PWA** | No | **Manifest + ServiceWorker** |
-| **Responsive** | Solo escritorio | **Móvil + tablet + escritorio** |
-| **Logs** | Console.log | **Python logging** + **Celery Beat** |
-| **Tareas programadas** | No | Alertas cada 5min + reporte semanal |
+Puerta Segura v3.0 es un sistema académico de control de acceso vehicular para la Universidad de Cundinamarca. Permite registrar vehículos con código QR, verificar accesos en tiempo real, gestionar listas negras y generar reportes completos.
+
+---
+
+## 👥 Roles del Sistema
+
+| Rol | Acceso |
+|-----|--------|
+| **Vigilante** | Dashboard, Vehículos (CRUD), Control de Acceso, Historial, Lista Negra, Visitantes, Reportes, Usuarios, Auditoría |
+| **Estudiante** | Registro de vehículos, Ver QR, Mi cuenta |
+
+---
+
+## 🚀 Funcionalidades Principales
+
+- 🔒 **Control de acceso** por QR (cámara real) y placa manual
+- 📱 **Código QR** con hash SHA-256, vigencia 365 días
+- 📊 **Dashboard** con estadísticas en tiempo real via WebSockets
+- 🚫 **Lista negra** con alertas automáticas
+- 👥 **Control de visitantes** con alertas de permanencia
+- 📋 **Historial** exportable a Excel, CSV y PDF
+- 📈 **Reportes ejecutivos** por rango de fechas
+- 🎓 **Registro público** de estudiantes sin autenticación previa
+- 🔊 **Feedback sonoro** al escanear QR
+- 📱 **PWA** instalable con soporte offline
 
 ---
 
@@ -30,7 +41,7 @@
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  React v3.0 (PWA)                │
+│                  React 18 (PWA)                  │
 │   Context  │  Hooks  │  Componentes  │  WebSocket│
 └─────────────────────┬───────────────────────────┘
                        │ HTTP REST + WebSocket
@@ -41,106 +52,133 @@
        │              │
 ┌──────▼──────┐ ┌─────▼──────────────────────────┐
 │  MySQL 8.0  │ │        Redis 7                  │
-│  8 modelos  │ │  Cache │ Channels │ Celery broker│
+│  8 tablas   │ │  Cache │ Channels │ Celery broker│
 └─────────────┘ └────────────────────────────────┘
-                          │
-                ┌─────────▼──────────────┐
-                │     Celery Workers     │
-                │  Email QR │ Alertas   │
-                │  Reporte semanal       │
-                └────────────────────────┘
 ```
 
 ---
 
-## 💻 Instalación local
+## 💻 Instalación Local (Windows)
 
-### Opción A — Docker (todo en un comando)
+### Requisitos
+- Python 3.11+
+- Node.js 18+
+- MySQL 8.0
+- MySQL Workbench
+
+### Paso 1 — Base de datos
+Abre MySQL Workbench → File → Open SQL Script → selecciona `database/puerta_segura.sql` → ejecutar con ⚡
+
+### Paso 2 — Backend
 ```bash
-docker-compose up --build
-# Abre http://localhost:8000
-```
-Levanta: MySQL + Redis + Django + Celery automáticamente.
-
-### Opción B — Manual (sin Docker)
-
-**Requisitos adicionales:** Redis instalado localmente  
-Windows: [redis.io/docs/getting-started/installation/install-redis-on-windows](https://redis.io/docs/getting-started/installation/install-redis-on-windows)  
-Mac: `brew install redis && brew services start redis`
-
-```bash
-# 1. MySQL: File → Open SQL Script → database/puerta_segura.sql → Ejecutar
-
-# 2. Backend
-cd backend
-python -m venv venv && source venv/bin/activate  # Mac/Linux
-# venv\Scripts\activate                           # Windows
+cd ps4/backend
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
-cp ../.env.example .env  # Editar con tu config
-python manage.py migrate
+python manage.py migrate --fake-initial
 python manage.py init_data
-
-# Terminal 1: servidor
-daphne -p 8000 config.asgi:application
-
-# Terminal 2: Celery workers (emails, alertas)
-celery -A config worker -l info
-
-# Terminal 3: Celery Beat (tareas programadas)
-celery -A config beat -l info
-
-# 3. Frontend
-cd frontend && npm install && npm start
+python manage.py runserver
 ```
 
----
-
-## 🧪 Pruebas unitarias
-
+### Paso 3 — Frontend
 ```bash
-cd backend
-pip install pytest pytest-django pytest-cov
-pytest -v --cov=api --cov-report=term-missing
+cd ps4/frontend
+npm install
+npm install jsqr
+npm start
 ```
 
-**37 pruebas cubren:**
-- Autenticación (login, logout, bloqueo de cuenta)
-- Validación de placas colombianas
-- CRUD de vehículos con permisos
-- Control de acceso (QR, manual, lista negra)
-- Barrera y estadísticas
-- Modelos (QR, vigencia, auditoría)
+Abre **http://localhost:3000**
 
 ---
 
-## ⚡ WebSockets en tiempo real
+## 🔑 Credenciales de Demo
 
-El dashboard se actualiza instantáneamente sin recargar:
+| Rol | Correo | Contraseña |
+|-----|--------|-----------|
+| Vigilante | vigilante@ucundinamarca.edu.co | Vigil2026! |
+| Admin | admin@ucundinamarca.edu.co | Admin2026! |
+| Estudiante | estudiante@ucundinamarca.edu.co | Est2026! |
+
+---
+
+## 🔌 API REST — Endpoints Principales
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/auth/login/` | Iniciar sesión |
+| POST | `/api/auth/registro/` | Registro público de estudiantes |
+| GET | `/api/vehiculos/` | Listar vehículos |
+| POST | `/api/vehiculos/` | Registrar vehículo |
+| POST | `/api/acceso/qr/` | Verificar QR |
+| POST | `/api/acceso/placa/` | Verificar placa manual |
+| GET | `/api/stats/` | Estadísticas del dashboard |
+| GET | `/api/historial/` | Historial de accesos |
+| GET | `/api/lista-negra/` | Lista negra |
+| GET | `/api/lista-negra/` | Lista negra |
+
+Documentación interactiva Swagger: **`http://localhost:8000/api/docs/`**
+
+---
+
+## 🗄️ Base de Datos
+
+8 tablas: `usuarios`, `vehiculos`, `registros_acceso`, `lista_negra`, `visitantes`, `estado_barrera`, `auditoria`, `notificaciones`
+
+- Trigger automático en lista negra
+- 2 vistas optimizadas
+- Índices en campos de búsqueda frecuente
+
+---
+
+## 📁 Estructura del Proyecto
 
 ```
-wss://tu-app.railway.app/ws/dashboard/      → Stats del sistema
-wss://tu-app.railway.app/ws/notifications/  → Notificaciones personales
-wss://tu-app.railway.app/ws/barrier/        → Estado de la barrera
+PUERTA-SEGURA/
+├── ps4/
+│   ├── backend/
+│   │   ├── api/
+│   │   │   ├── models.py       — 8 modelos Django
+│   │   │   ├── views.py        — Endpoints REST
+│   │   │   ├── serializers.py  — Serialización JSON
+│   │   │   ├── urls.py         — Rutas API
+│   │   │   ├── consumers.py    — WebSocket consumers
+│   │   │   └── tasks.py        — Tareas Celery
+│   │   └── config/
+│   │       ├── settings.py     — Configuración Django
+│   │       └── asgi.py         — Servidor ASGI
+│   └── frontend/src/
+│       ├── App.jsx             — Landing + Roles + Paneles
+│       ├── api.js              — Capa de servicios HTTP
+│       ├── context/            — Estado global React
+│       ├── hooks/              — Hooks personalizados
+│       ├── utils/              — Tokens de diseño
+│       └── components/
+│           ├── Dashboard/      — Estadísticas tiempo real
+│           ├── Vehicles/       — CRUD vehículos
+│           ├── Access/         — Scanner QR + manual
+│           ├── History/        — Historial exportable
+│           ├── Blacklist/      — Lista negra
+│           ├── Visitors/       — Control visitantes
+│           └── Reports/        — Reportes ejecutivos
+└── database/
+    └── puerta_segura.sql       — Script SQL completo
 ```
 
-El indicador 🟢 en el topbar muestra si la conexión WebSocket está activa.
+---
+
+## ⚡ Stack Tecnológico
+
+| Componente | Tecnología |
+|-----------|-----------|
+| Backend | Django 4.2 + Django REST Framework |
+| Frontend | React 18 + Recharts + jsQR |
+| Base de datos | MySQL 8.0 |
+| Autenticación | JWT con httpOnly cookies |
+| Tiempo real | Django Channels + WebSockets |
+| Tareas async | Celery + Redis |
+| Despliegue | Railway + Docker |
 
 ---
 
-## 📦 Tareas Celery programadas
-
-| Tarea | Frecuencia | Descripción |
-|-------|-----------|-------------|
-| `verificar_permanencia_prolongada` | Cada 5 min | Detecta vehículos con >4h en campus |
-| `enviar_reporte_semanal` | Cada 7 días | PDF semanal a todos los admins |
-| `enviar_qr_por_correo` | Al crear/renovar | Email con QR adjunto (con 3 reintentos) |
-
----
-
-## 🔌 API REST
-
-Ver documentación interactiva en: **`/api/docs/`** (Swagger UI)
-
----
-
-*v3.0 · Proyecto académico · Universidad de Cundinamarca · 2026*
+*v3.0 · Proyecto de Gestión del Conocimiento · Universidad de Cundinamarca · 2026*
